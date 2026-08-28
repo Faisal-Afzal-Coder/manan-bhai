@@ -12,6 +12,19 @@ const ensureMongoConnected = () => {
   }
 };
 
+const buildDateQuery = ({ startDate, endDate } = {}) => {
+  if (!startDate && !endDate) return {};
+
+  const dateQuery = {};
+  if (startDate) dateQuery.$gte = new Date(startDate);
+  if (endDate) {
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    dateQuery.$lte = end;
+  }
+  return { date: dateQuery };
+};
+
 // Helper to check if category is income / received
 const isReceivedCategory = (categoryName) => {
   if (!categoryName) return false;
@@ -154,10 +167,10 @@ exports.deleteRecordById = async (id) => {
 };
 
 // ==================== AGGREGATION & CASH BALANCE CALCULATIONS ====================
-exports.getCategoryStats = async (categoryName) => {
+exports.getCategoryStats = async (categoryName, dateFilters = {}) => {
   ensureMongoConnected();
   const stats = await Record.aggregate([
-    { $match: { category: categoryName } },
+    { $match: { category: categoryName, ...buildDateQuery(dateFilters) } },
     {
       $group: {
         _id: '$category',
@@ -172,9 +185,10 @@ exports.getCategoryStats = async (categoryName) => {
   };
 };
 
-exports.getAllCategoryTotals = async () => {
+exports.getAllCategoryTotals = async (dateFilters = {}) => {
   ensureMongoConnected();
   const totals = await Record.aggregate([
+    { $match: buildDateQuery(dateFilters) },
     {
       $group: {
         _id: '$category',
@@ -197,9 +211,9 @@ exports.getAllCategoryTotals = async () => {
  * totalAvailableCash: initialCash + totalReceived
  * remainingCash: totalAvailableCash - totalUsed
  */
-exports.getGrandTotals = async () => {
+exports.getGrandTotals = async (dateFilters = {}) => {
   ensureMongoConnected();
-  const records = await Record.find();
+  const records = await Record.find(buildDateQuery(dateFilters));
   let totalReceived = 0;
   let totalReceivedRecords = 0;
   let totalUsed = 0;

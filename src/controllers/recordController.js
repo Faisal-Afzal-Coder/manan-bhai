@@ -1,9 +1,9 @@
 const store = require('../services/store');
 
 // Helper to get category and cash totals
-const getCategoryAndCashSummary = async (categoryName) => {
-  const categoryStats = await store.getCategoryStats(categoryName);
-  const grandTotals = await store.getGrandTotals();
+const getCategoryAndCashSummary = async (categoryName, dateFilters = {}) => {
+  const categoryStats = await store.getCategoryStats(categoryName, dateFilters);
+  const grandTotals = await store.getGrandTotals(dateFilters);
   const cashDoc = await store.getCashSetting();
 
   const initialCash = cashDoc.initialCash || 0;
@@ -29,6 +29,7 @@ exports.getRecordsByCategory = async (req, res) => {
   try {
     const rawCategory = req.params.category;
     const { search, startDate, endDate } = req.query;
+    const dateFilters = { startDate, endDate };
 
     if (!rawCategory) {
       return res.status(400).json({
@@ -50,7 +51,7 @@ exports.getRecordsByCategory = async (req, res) => {
     const records = await store.getRecords(categoryName, { search, startDate, endDate });
 
     // Calculate live category totals
-    const summary = await getCategoryAndCashSummary(categoryName);
+    const summary = await getCategoryAndCashSummary(categoryName, dateFilters);
 
     res.status(200).json({
       success: true,

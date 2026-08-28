@@ -5,6 +5,9 @@ const { REMOVED_SLUGS, REMOVED_NAMES } = require('../utils/seedCategories');
 // @route   GET /api/dashboard
 exports.getDashboard = async (req, res) => {
   try {
+    const { startDate, endDate } = req.query;
+    const dateFilters = { startDate, endDate };
+
     // 1. Get initial cash setting
     const cashDoc = await store.getCashSetting();
     const initialCash = cashDoc.initialCash || 0;
@@ -13,8 +16,8 @@ exports.getDashboard = async (req, res) => {
     const categories = await store.getAllCategories();
 
     // 3. Get totals map and grand totals
-    const totalsMap = await store.getAllCategoryTotals();
-    const grandTotals = await store.getGrandTotals();
+    const totalsMap = await store.getAllCategoryTotals(dateFilters);
+    const grandTotals = await store.getGrandTotals(dateFilters);
 
     // 4. Map categories with live computed totals
     const categoryCards = categories
