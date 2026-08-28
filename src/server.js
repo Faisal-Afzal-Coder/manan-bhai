@@ -50,18 +50,20 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start listening immediately
-app.listen(PORT, () => {
-  console.log(`========================================`);
-  console.log(`🚀 Expense Tracker Server is running!`);
-  console.log(`🌐 Local URL: http://localhost:${PORT}`);
-  console.log(`📡 API Base: http://localhost:${PORT}/api`);
-  console.log(`========================================`);
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`========================================`);
+    console.log(`🚀 Expense Tracker Server is running!`);
+    console.log(`🌐 Local URL: http://localhost:${PORT}`);
+    console.log(`📡 API Base: http://localhost:${PORT}/api`);
+    console.log(`========================================`);
 
-  // Attempt database connection in background
-  connectDB().then((connected) => {
-    if (connected) {
-      seedDefaults();
-    }
+    connectDB().then((connected) => {
+      if (connected) {
+        seedDefaults();
+      }
+    });
   });
-});
+}
+
+module.exports = app;
